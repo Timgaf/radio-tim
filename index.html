@@ -174,8 +174,8 @@ async function connectBLE() {
     mainPanel.classList.remove('hidden');
     connectBtn.textContent = 'Connecte';
 
-    sendCommand('STATUS');
-    sendCommand('STATIONS');
+    await sendCommand('STATUS');
+    await sendCommand('STATIONS');
   } catch (err) {
     console.error(err);
     alert('Connexion Bluetooth annulee ou echouee : ' + err);
