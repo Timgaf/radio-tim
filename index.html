@@ -142,7 +142,10 @@ const passInput = document.getElementById('passInput');
 const saveWifiBtn = document.getElementById('saveWifiBtn');
 
 connectBtn.addEventListener('click', connectBLE);
-scanWifiBtn.addEventListener('click', () => sendCommand('SCANWIFI'));
+scanWifiBtn.addEventListener('click', () => {
+  wifiList.innerHTML = '';
+  sendCommand('SCANWIFI');
+});
 saveWifiBtn.addEventListener('click', () => {
   const ssid = ssidInput.value.trim();
   const pass = passInput.value;
@@ -175,6 +178,7 @@ async function connectBLE() {
     connectBtn.textContent = 'Connecte';
 
     sendCommand('STATUS');
+    stationsList.innerHTML = '';
     sendCommand('STATIONS');
   } catch (err) {
     console.error(err);
@@ -217,13 +221,10 @@ function handleNotification(event) {
       volSlider.value = data.vol;
       volVal.textContent = data.vol;
     }
-  } else if (value.startsWith('STATIONS:')) {
-    stationsMap = {};
-    const entries = value.substring(9).split(';');
-    stationsList.innerHTML = '';
-    entries.forEach(e => {
-      const [idx, name] = e.split('=');
-      if (!name) return;
+  } else if (value.startsWith('STATION_ITEM:')) {
+    const entry = value.substring(13);
+    const [idx, name] = entry.split('=');
+    if (name) {
       stationsMap[idx] = name;
       const btn = document.createElement('button');
       btn.className = 'station-btn';
@@ -231,18 +232,20 @@ function handleNotification(event) {
       btn.textContent = name;
       btn.addEventListener('click', () => sendCommand('STATION:' + idx));
       stationsList.appendChild(btn);
-    });
-  } else if (value.startsWith('WIFILIST:')) {
-    wifiList.innerHTML = '';
-    const entries = value.substring(9).split(';');
-    entries.forEach(e => {
-      const [idx, ssid] = e.split('=');
-      if (!ssid) return;
+    }
+  } else if (value === 'STATIONS_DONE') {
+    highlightActiveStation(stationName.textContent);
+  } else if (value.startsWith('WIFI_ITEM:')) {
+    const entry = value.substring(10);
+    const [idx, ssid] = entry.split('=');
+    if (ssid) {
       const div = document.createElement('div');
       div.textContent = ssid;
       div.addEventListener('click', () => { ssidInput.value = ssid; });
       wifiList.appendChild(div);
-    });
+    }
+  } else if (value === 'WIFILIST_DONE') {
+    // rien a faire de plus, la liste est deja affichee au fur et a mesure
   } else if (value.startsWith('ERR:')) {
     console.warn(value);
   }
